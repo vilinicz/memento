@@ -121,7 +121,7 @@ export default {
     // todo хитрый сохранятор.
     //  искать пришедший в тех, что уже есть и что то делать.
     //  обновлять пришедший, который уже есть.
-    // todo замерить производительность
+    // todo замерить производительность. медленно!!!
     collectDescriptors(results) {
       const nextDatas = results.map(({ descriptor }) => ({
         id: uuidv1(),
@@ -131,7 +131,6 @@ export default {
       let distance = -1;
       let prevDatas = JSON.parse(localStorage.getItem(storageName)) || [];
 
-      // todo узкое место? Сложность алгоритма O(n^4)???
       prevDatas = Object.values(prevDatas)
         .map(({ id, descriptor }) => ({
           id,

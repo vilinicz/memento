@@ -29,8 +29,11 @@
 <script>
 import * as faceapi from 'face-api.js';
 import screenfull from 'screenfull';
+import uuidv1 from 'uuid/v1';
 
 const maxFps = 15;
+const similarityThreshold = 0.6;
+const storageName = 'users';
 let forwardTimes = [];
 
 export default {
@@ -50,8 +53,8 @@ export default {
       },
 
       // При экспериментах, не забыть поменять загрузку!
-      // options: new faceapi.SsdMobilenetv1Options(this.ssdMobilenetv1Options),
-      options: new faceapi.TinyFaceDetectorOptions(this.tinyFaceDetectorOptions),
+      options: new faceapi.SsdMobilenetv1Options(this.ssdMobilenetv1Options),
+      // options: new faceapi.TinyFaceDetectorOptions(this.tinyFaceDetectorOptions),
 
       ssdMobilenetv1Options: {
         minConfidence: 0.5,
@@ -79,8 +82,8 @@ export default {
       const modelUri = '/models';
 
       // Точнее, но медленнее.
-      // await faceapi.loadSsdMobilenetv1Model(modelUri);
-      await faceapi.loadTinyFaceDetectorModel(modelUri);
+      await faceapi.loadSsdMobilenetv1Model(modelUri);
+      // await faceapi.loadTinyFaceDetectorModel(modelUri);
 
       await faceapi.loadFaceLandmarkModel(modelUri);
       await faceapi.loadFaceRecognitionModel(modelUri);
@@ -97,11 +100,11 @@ export default {
         .withFaceLandmarks()
         .withFaceDescriptors();
 
-      this.updateStats(prevTime);
-
       if (results.length > 0) {
         this.collectDescriptors(results);
       }
+
+      this.updateStats(prevTime);
 
       setTimeout(this.detectFaces, this.timeout);
     },
@@ -118,11 +121,52 @@ export default {
     // todo хитрый сохранятор.
     //  искать пришедший в тех, что уже есть и что то делать.
     //  обновлять пришедший, который уже есть.
+    // todo замерить производительность
     collectDescriptors(results) {
-      const descriptors = results.map(result => result.descriptor);
-      localStorage.setItem('descriptors', descriptors);
+      const nextDatas = results.map(({ descriptor }) => ({
+        id: uuidv1(),
+        descriptor,
+      }));
 
-      console.log('descriptors', descriptors);
+      let distance = -1;
+      let prevDatas = JSON.parse(localStorage.getItem(storageName)) || [];
+
+      // todo узкое место? Сложность алгоритма O(n^4)???
+      prevDatas = Object.values(prevDatas)
+        .map(({ id, descriptor }) => ({
+          id,
+          descriptor: Float32Array.from(Object.values(descriptor)),
+        }));
+
+      nextDatas.forEach((nextData) => {
+        prevDatas.forEach((prevData) => {
+          const nextDistance = faceapi.round(faceapi.euclideanDistance(
+            nextData.descriptor,
+            prevData.descriptor,
+          ));
+
+          // Первый проход.
+          if (distance === -1) {
+            distance = nextDistance;
+          }
+
+          if (nextDistance < distance) {
+            distance = nextDistance;
+          }
+        });
+      });
+
+      if (distance !== -1) {
+        if (distance < similarityThreshold) {
+          // console.log('Найдено', distance);
+        } else {
+          // console.log('НЕ найдено', distance);
+          localStorage.setItem(storageName, JSON.stringify(prevDatas.concat(nextDatas)));
+        }
+      } else {
+        // console.log('ПУСТО, добавим начальные данные.');
+        localStorage.setItem(storageName, JSON.stringify(nextDatas));
+      }
     },
 
     enableScreenFull() {

@@ -8,6 +8,7 @@ module.exports = {
     '@vue/airbnb',
   ],
   rules: {
+    'no-use-before-define': 'off',
     'no-console': 'off',
     'no-param-reassign': 'off',
     'object-curly-newline': 'off',

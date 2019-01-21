@@ -4,6 +4,7 @@
       ref="video"
       autoplay
       muted
+      hidden
       @play="detect"
     />
 

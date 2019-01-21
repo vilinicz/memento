@@ -1,6 +1,5 @@
 <template>
   <div class="App">
-    <!-- todo hidden -->
     <video
       ref="video"
       autoplay
@@ -51,8 +50,8 @@ export default {
       },
 
       // При экспериментах, не забыть поменять загрузку!
-      options: new faceapi.SsdMobilenetv1Options(this.ssdMobilenetv1Options),
-      // options: new faceapi.TinyFaceDetectorOptions(this.tinyFaceDetectorOptions),
+      // options: new faceapi.SsdMobilenetv1Options(this.ssdMobilenetv1Options),
+      options: new faceapi.TinyFaceDetectorOptions(this.tinyFaceDetectorOptions),
 
       ssdMobilenetv1Options: {
         minConfidence: 0.5,
@@ -80,8 +79,8 @@ export default {
       const modelUri = '/models';
 
       // Точнее, но медленнее.
-      await faceapi.loadSsdMobilenetv1Model(modelUri);
-      // await faceapi.loadTinyFaceDetectorModel(modelUri);
+      // await faceapi.loadSsdMobilenetv1Model(modelUri);
+      await faceapi.loadTinyFaceDetectorModel(modelUri);
 
       await faceapi.loadFaceLandmarkModel(modelUri);
       await faceapi.loadFaceRecognitionModel(modelUri);

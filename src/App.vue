@@ -1,5 +1,6 @@
 <template>
   <div class="App">
+    <!-- todo hidden -->
     <video
       ref="video"
       autoplay
@@ -42,7 +43,11 @@ export default {
 
       constraints: {
         audio: false,
-        video: { frameRate: { max: maxFps } },
+        video: {
+          frameRate: { max: maxFps },
+          // user | environment.
+          facingMode: 'user',
+        },
       },
 
       // При экспериментах, не забыть поменять загрузку!
@@ -51,10 +56,10 @@ export default {
 
       ssdMobilenetv1Options: {
         minConfidence: 0.5,
-        maxResults: 5,
+        maxResults: 30,
       },
       tinyFaceDetectorOptions: {
-        inputSize: 512,
+        inputSize: 160,
         scoreThreshold: 0.5,
       },
 
@@ -117,6 +122,8 @@ export default {
     collectDescriptors(results) {
       const descriptors = results.map(result => result.descriptor);
       localStorage.setItem('descriptors', descriptors);
+
+      console.log('descriptors', descriptors);
     },
 
     enableScreenFull() {
